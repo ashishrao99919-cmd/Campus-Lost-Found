@@ -14,6 +14,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from category_rules import validate_category
 from content_rules import validate_listing_content
 from matching import run_matchmaker
+import cloud as cloudinary_fs
 from database import (
     ALLOWED_IMAGE_EXTENSIONS,
     BASE_DIR,
@@ -118,7 +119,10 @@ def serialize(row):
     """Row dict -> API dict with an absolute image_url when available."""
     data = dict(row)
     image_path = data.get("image_path")
-    data["image_url"] = f"{request.host_url}{image_path}" if image_path else None
+    if image_path and (image_path.startswith("http://") or image_path.startswith("https://")):
+        data["image_url"] = image_path
+    else:
+        data["image_url"] = f"{request.host_url}{image_path}" if image_path else None
     user_id = session.get("user_id")
     data["is_owner"] = bool(
         user_id is not None
@@ -627,6 +631,7 @@ def delete_item(item_id):
     db.execute("DELETE FROM items WHERE id = ?", (item_id,))
     db.commit()
     delete_upload_file(item.get("image_path"))
+    cloudinary_fs.delete(item.get("image_path"))
     return ok("Item deleted successfully")
 
 
@@ -690,30 +695,49 @@ def upload_image(item_id):
         allowed = ", ".join(sorted(ALLOWED_IMAGE_EXTENSIONS))
         return fail(f"Unsupported image type. Allowed: {allowed}.")
 
-    unique_name = f"item_{item_id}_{uuid.uuid4().hex[:8]}_{original}"
-    destination = UPLOAD_DIR / unique_name
-    resolved = destination.resolve()
-    if UPLOAD_DIR.resolve() not in resolved.parents:
-        return fail("Invalid file path.", code=400)
+    file.stream.seek(0, os.SEEK_END)
+    size = file.stream.tell()
+    file.stream.seek(0)
+    if size > 8 * 1024 * 1024:
+        return fail("Image is too large. The maximum allowed size is 8 MB.")
 
     previous_path = (fetch_item(item_id) or {}).get("image_path")
-    try:
-        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-        file.save(destination)
-    except OSError:
-        return fail(
-            "Image upload is not available in this environment.",
-            code=503,
-        )
+
+    if cloudinary_fs.configured():
+        public_id = f"item_{item_id}_{uuid.uuid4().hex[:8]}"
+        try:
+            image_url = cloudinary_fs.upload(file.stream, public_id)
+        except Exception as exc:
+            return fail(
+                f"Image upload failed: {str(exc) if str(exc) else 'unknown Cloudinary error'}.",
+                code=502,
+            )
+        stored = image_url
+    else:
+        unique_name = f"item_{item_id}_{uuid.uuid4().hex[:8]}_{original}"
+        destination = UPLOAD_DIR / unique_name
+        resolved = destination.resolve()
+        if UPLOAD_DIR.resolve() not in resolved.parents:
+            return fail("Invalid file path.", code=400)
+        try:
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+            file.save(destination)
+        except OSError:
+            return fail(
+                "Image upload is not available in this environment.",
+                code=503,
+            )
+        stored = f"uploads/{unique_name}"
 
     db = open_db()
     db.execute(
         "UPDATE items SET image_path = ?, updated_at = datetime('now') WHERE id = ?",
-        (f"uploads/{unique_name}", item_id),
+        (stored, item_id),
     )
     db.commit()
-    if previous_path and previous_path != f"uploads/{unique_name}":
+    if previous_path and previous_path != stored:
         delete_upload_file(previous_path)
+        cloudinary_fs.delete(previous_path)
 
     return ok("Image uploaded successfully", item=fetch_item(item_id))
 
@@ -1308,6 +1332,7 @@ def admin_delete_item(item_id):
     db.commit()
     if image_row and image_row["image_path"]:
         delete_upload_file(image_row["image_path"])
+        cloudinary_fs.delete(image_row["image_path"])
     log_admin_action("delete_item", "item", item_id, row["item_name"])
     return jsonify({"success": True, "message": "Item deleted successfully."})
 
