@@ -176,7 +176,11 @@ def _existing_items_columns(conn):
 
 def init_db():
     """Create the database file and tables if they do not exist."""
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    if not USE_POSTGRES:
+        try:
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
     conn = get_connection()
     try:
         schema_sql = open(SCHEMA_PATH, "r", encoding="utf-8").read()

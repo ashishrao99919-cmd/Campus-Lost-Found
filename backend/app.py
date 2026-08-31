@@ -697,7 +697,14 @@ def upload_image(item_id):
         return fail("Invalid file path.", code=400)
 
     previous_path = (fetch_item(item_id) or {}).get("image_path")
-    file.save(destination)
+    try:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        file.save(destination)
+    except OSError:
+        return fail(
+            "Image upload is not available in this environment.",
+            code=503,
+        )
 
     db = open_db()
     db.execute(
