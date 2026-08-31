@@ -16,3 +16,6 @@ backend_backup/uploads
 .vscode
 .vercel
 cookies.txt
+
+.vercel
+.env*

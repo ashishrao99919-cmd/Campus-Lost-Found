@@ -64,8 +64,13 @@ class _PgRow:
 class _PgCursor:
     """Wraps psycopg2 cursor to match sqlite3 cursor interface."""
 
-    def __init__(self, real_cur):
+    def __init__(self, real_cur, lastrowid=None):
         self._cur = real_cur
+        self._lastrowid = lastrowid
+
+    @property
+    def lastrowid(self):
+        return self._lastrowid
 
     def fetchone(self):
         row = self._cur.fetchone()
@@ -80,28 +85,32 @@ class _PgConnection:
 
     def __init__(self, conn):
         self._conn = conn
-        self._lastrowid = None
 
     def execute(self, query, params=None):
         q = query.replace("?", "%s")
         q_upper = q.strip().upper()
-        is_insert = q_upper.startswith("INSERT") and "RETURNING" not in q_upper
-        if is_insert:
-            q += " RETURNING id"
-
+        if not q_upper.startswith("PRAGMA"):
+            q = q.replace("datetime('now')", "NOW()")
+            q = q.replace("datetime('now', 'localtime')", "NOW()")
+            q = q.replace("INSERT OR IGNORE INTO", "INSERT INTO")
+        is_insert = q_upper.startswith("INSERT") or " INSERT " in (" " + q_upper)
+        is_or_ignore = " INSERT OR IGNORE " in (" " + q.strip().upper())
         cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if is_insert:
+            if is_or_ignore and "ON CONFLICT" not in q.upper():
+                q += " ON CONFLICT DO NOTHING"
+            elif "RETURNING" not in q_upper:
+                q += " RETURNING id"
         cur.execute(q, params or ())
 
         if is_insert:
             row = cur.fetchone()
-            self._lastrowid = row["id"] if row else None
+            lastrowid = row["id"] if row else None
             cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            lastrowid = None
 
-        return _PgCursor(cur)
-
-    @property
-    def lastrowid(self):
-        return self._lastrowid
+        return _PgCursor(cur, lastrowid)
 
     def commit(self):
         self._conn.commit()
@@ -150,7 +159,7 @@ def get_connection():
 
 def _pg_table_columns(conn, table_name):
     """Return set of column names for a table (PostgreSQL)."""
-    cur = conn._conn.cursor()
+    cur = conn._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
         "SELECT column_name FROM information_schema.columns "
         "WHERE table_name = %s",
@@ -170,30 +179,20 @@ def init_db():
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     conn = get_connection()
     try:
+        schema_sql = open(SCHEMA_PATH, "r", encoding="utf-8").read()
         if USE_POSTGRES:
-            existing = _pg_existing_tables(conn)
-        else:
-            existing = {row[0] for row in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table'"
-            )}
+            schema_sql = _adapt_schema_for_pg(schema_sql)
+        conn.executescript(schema_sql)
 
-        # --- items table (always created via schema.sql) ---
-        # --- users table tweaks (idempotent) ---
+        # --- idempotent migration tweaks ---
         user_cols = (
             _pg_table_columns(conn, "users") if USE_POSTGRES
             else {row[1] for row in conn.execute("PRAGMA table_info(users)")}
         )
-
-        if USE_POSTGRES:
-            if user_cols and "role" not in user_cols:
-                conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
-            if user_cols and "blocked" not in user_cols:
-                conn.execute("ALTER TABLE users ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0")
-        else:
-            if user_cols and "role" not in user_cols:
-                conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
-            if user_cols and "blocked" not in user_cols:
-                conn.execute("ALTER TABLE users ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0")
+        if user_cols and "role" not in user_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+        if user_cols and "blocked" not in user_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0")
 
         columns = _existing_items_columns(conn)
         if columns and "reporter_id" not in columns:
@@ -204,53 +203,9 @@ def init_db():
             conn.execute(
                 "ALTER TABLE items ADD COLUMN university TEXT NOT NULL DEFAULT 'other'"
             )
-
-        if "claims" not in existing:
-            conn.executescript("""
-                CREATE TABLE IF NOT EXISTS claims (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    listing_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-                    claimant_id INTEGER NOT NULL REFERENCES users(id),
-                    proof_details TEXT NOT NULL DEFAULT '',
-                    status TEXT NOT NULL DEFAULT 'pending'
-                        CHECK (status IN ('pending', 'accepted', 'rejected')),
-                    resolved_at TEXT,
-                    resolved_by INTEGER REFERENCES users(id),
-                    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-                    UNIQUE(listing_id, claimant_id)
-                );
-                CREATE INDEX IF NOT EXISTS idx_claims_listing ON claims(listing_id);
-                CREATE INDEX IF NOT EXISTS idx_claims_claimant ON claims(claimant_id);
-                CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
-
-                CREATE TABLE IF NOT EXISTS claim_notifications (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    claim_id INTEGER NOT NULL REFERENCES claims(id) ON DELETE CASCADE,
-                    user_id INTEGER NOT NULL REFERENCES users(id),
-                    listing_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-                    notification_type TEXT NOT NULL CHECK (notification_type IN ('accepted', 'rejected')),
-                    title TEXT NOT NULL DEFAULT '',
-                    item_name TEXT NOT NULL DEFAULT '',
-                    is_read INTEGER NOT NULL DEFAULT 0,
-                    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-                );
-                CREATE INDEX IF NOT EXISTS idx_claim_notif_user ON claim_notifications(user_id);
-            """)
-
-        with open(SCHEMA_PATH, "r", encoding="utf-8") as fh:
-            schema_sql = fh.read()
-        if USE_POSTGRES:
-            schema_sql = _adapt_schema_for_pg(schema_sql)
-        conn.executescript(schema_sql)
         conn.commit()
     finally:
         conn.close()
-
-
-def _pg_existing_tables(conn):
-    cur = conn._conn.cursor()
-    cur.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-    return {row["tablename"] for row in cur.fetchall()}
 
 
 def rows_to_dicts(rows):
