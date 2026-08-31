@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Lost &amp; Found — Help it find its way home</title>
+  <meta name="description" content="Campus Lost & Found helps students report missing belongings, share found items, and reconnect with what matters across campus." />
+  <meta name="theme-color" content="#2c3a94" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('clf_theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      } catch (e) { document.documentElement.dataset.theme = 'light'; }
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to content</a>
+
+  <header class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a class="brand" href="#/" aria-label="Campus Lost and Found — home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5C8.5 17.6 6 13.9 6 10.4a6 6 0 1 1 12 0c0 3.5-2.5 7.2-6 11.1z"/><circle cx="12" cy="10.2" r="2.3"/></svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-top">Campus</span>
+          <span class="brand-bottom">Lost &amp; Found</span>
+        </span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#/" data-nav="home">Home</a>
+        <a href="#/lost-items" data-nav="lost-items">Lost Items</a>
+        <a href="#/found-items" data-nav="found-items">Found Items</a>
+        <a href="#/my-listings" data-nav="my-listings" class="nav-auth-only" hidden>My Listings</a>
+        <a href="#/admin" data-nav="admin" class="nav-admin-only" hidden>Admin</a>
+        <a href="#/" data-how>How It Works</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="icon-btn" id="navSearchBtn" aria-label="Search items"></button>
+        <div class="notif-wrap nav-auth-only" hidden>
+          <button class="icon-btn notif-btn" id="notifBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+            <span class="notif-badge" id="notifBadge" hidden>0</span>
+          </button>
+          <div class="notif-panel" id="notifPanel" hidden>
+            <div class="notif-panel-head">
+              <h3>Notifications</h3>
+              <button class="btn-link" id="notifMarkAll">Mark all as read</button>
+            </div>
+            <div class="notif-list" id="notifList">
+              <p class="notif-empty">No notifications yet.</p>
+            </div>
+          </div>
+        </div>
+        <div class="report-wrap">
+          <button class="btn btn-primary btn-sm" id="reportBtn" aria-haspopup="true" aria-expanded="false">Report Item</button>
+          <div class="report-menu" id="reportMenu" hidden>
+            <a href="#/report?type=lost" data-report-link></a>
+            <a href="#/report?type=found" data-report-link></a>
+          </div>
+        </div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"></button>
+        <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu"></button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobileMenu" hidden>
+      <nav class="mobile-links" aria-label="Mobile">
+        <a href="#/" data-nav="home">Home</a>
+        <a href="#/lost-items" data-nav="lost-items">Lost Items</a>
+        <a href="#/found-items" data-nav="found-items">Found Items</a>
+        <a href="#/my-listings" data-nav="my-listings" class="nav-auth-only" hidden>My Listings</a>
+        <a href="#/admin" data-nav="admin" class="nav-admin-only" hidden>Admin</a>
+        <a href="#/" data-how>How It Works</a>
+      </nav>
+      <div class="mobile-actions">
+        <a class="btn btn-primary" href="#/report?type=lost" data-mobile-report></a>
+        <a class="btn btn-secondary" href="#/report?type=found" data-mobile-report></a>
+      </div>
+    </div>
+  </header>
+
+  <div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Search campus items">
+    <div class="search-backdrop" data-close-search></div>
+    <form class="search-panel" id="globalSearchForm" role="search">
+      <div class="search-row">
+        <span class="search-icon" aria-hidden="true"></span>
+        <input class="input search-input" id="globalSearchInput" type="search" autocomplete="off"
+               placeholder="Search for wallets, laptops, ID cards, books..." aria-label="Search items" />
+        <button type="button" class="icon-btn" data-close-search aria-label="Close search"></button>
+      </div>
+      <p class="search-hint">Try: wallet · earbuds · ID card · calculator · hoodie</p>
+    </form>
+  </div>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand brand--footer" href="#/">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5C8.5 17.6 6 13.9 6 10.4a6 6 0 1 1 12 0c0 3.5-2.5 7.2-6 11.1z"/><circle cx="12" cy="10.2" r="2.3"/></svg>
+          </span>
+          <span class="brand-text"><span class="brand-top">Campus</span><span class="brand-bottom">Lost &amp; Found</span></span>
+        </a>
+        <p>Lost something? Found something? Help it find its way home.</p>
+        <p class="footer-note">A community platform for students. This is a frontend demo — all data lives in your browser.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="#/lost-items">Lost Items</a>
+        <a href="#/found-items">Found Items</a>
+        <a href="#/report?type=lost">Report a Lost Item</a>
+        <a href="#/report?type=found">Report a Found Item</a>
+        <a href="#/" data-how>How It Works</a>
+      </div>
+      <div class="footer-col">
+        <h4>Categories</h4>
+        <a href="#/items?category=electronics">Electronics</a>
+        <a href="#/items?category=id-card">ID Cards</a>
+        <a href="#/items?category=wallets">Wallets</a>
+        <a href="#/items?category=keys">Keys</a>
+        <a href="#/items?category=books">Books</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© <span id="year"></span> Campus Lost &amp; Found · Built for the campus community.</p>
+      <p>Demo project · No real personal data</p>
+    </div>
+  </footer>
+
+  <noscript><p style="padding:2rem;text-align:center;font-family:sans-serif">Campus Lost &amp; Found needs JavaScript to run. Please enable it and reload.</p></noscript>
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

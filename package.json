@@ -1,0 +1,16 @@
+{
+  "name": "campus-lost-and-found",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Frontend-only campus Lost & Found platform. Vite + vanilla JavaScript, data persisted in localStorage.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1",
+    "vite": "^5.4.8"
+  }
+}

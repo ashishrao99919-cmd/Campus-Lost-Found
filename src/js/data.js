@@ -1,0 +1,196 @@
+export const CATEGORIES = [
+  { id: 'electronics', label: 'Electronics', icon: 'smartphone' },
+  { id: 'id-card', label: 'ID Cards', icon: 'card' },
+  { id: 'bags', label: 'Bags', icon: 'bag' },
+  { id: 'wallets', label: 'Wallets', icon: 'wallet' },
+  { id: 'books', label: 'Books', icon: 'book' },
+  { id: 'keys', label: 'Keys', icon: 'key' },
+  { id: 'clothing', label: 'Clothing', icon: 'shirt' },
+  { id: 'other', label: 'Other', icon: 'dots' },
+];
+
+export const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.label]));
+
+export function categoryLabel(id) {
+  return CATEGORY_LABELS[id] || 'Other';
+}
+
+export const UNIVERSITIES = [
+  { id: 'mdu', label: 'Maharshi Dayanand University (MDU)' },
+  { id: 'du', label: 'Delhi University (DU)' },
+  { id: 'kuk', label: 'Kurukshetra University (KUK)' },
+  { id: 'pu', label: 'Panjab University' },
+  { id: 'amity', label: 'Amity University' },
+  { id: 'lpu', label: 'Lovely Professional University (LPU)' },
+  { id: 'cu', label: 'Chandigarh University' },
+  { id: 'gju', label: 'Guru Jambheshwar University' },
+  { id: 'mau', label: 'Maharaja Agrasen University' },
+  { id: 'other', label: 'Other' },
+];
+
+export const UNIVERSITY_LABELS = Object.fromEntries(UNIVERSITIES.map((u) => [u.id, u.label]));
+
+export function universityLabel(id) {
+  return UNIVERSITY_LABELS[id] || 'Other';
+}
+
+export const DEMO_ITEMS = [
+  {
+    id: 'itm-101',
+    name: 'Black Leather Wallet',
+    status: 'lost',
+    category: 'wallets',
+    location: 'Central Library',
+    date: '2026-08-18',
+    description: 'Bifold leather wallet in dark brown, last seen on the second-floor study desks near the windows.',
+    details: ["Embossed initials 'R.K.' on the inside flap", 'Contains a metro card and two bank cards'],
+    reporter: { name: 'Rhea Kapoor', phone: '+1 (555) 014-2938', email: 'rhea.kapoor@campus.edu' },
+  },
+  {
+    id: 'itm-102',
+    name: 'Black Wireless Earbuds',
+    status: 'found',
+    category: 'electronics',
+    location: 'Student Cafeteria',
+    date: '2026-08-19',
+    description: 'Charging case found under a table near the juice counter after lunch hour. Handed to the student council desk.',
+    details: ['Small scratch on the charging lid', "Initials 'S.M.' written inside the case"],
+    reporter: { name: 'Kabir Mehta', phone: '+1 (555) 014-2077', email: 'kabir.mehta@campus.edu' },
+  },
+  {
+    id: 'itm-103',
+    name: 'Blue Laptop Bag',
+    status: 'lost',
+    category: 'bags',
+    location: 'Computer Lab (Block C)',
+    date: '2026-08-15',
+    description: 'Navy blue padded laptop bag left near the printer station. Contains a 15-inch laptop and class notes.',
+    details: ['Blue paper-plane keychain on the zipper', 'Calculator in the front pocket'],
+    reporter: { name: 'Aditya Rao', phone: '+1 (555) 014-4315', email: 'aditya.rao@campus.edu' },
+  },
+  {
+    id: 'itm-104',
+    name: 'Student ID Card',
+    status: 'found',
+    category: 'id-card',
+    location: 'Main Gate',
+    date: '2026-08-20',
+    description: 'ID card picked up near the turnstiles in the morning rush and submitted to campus security.',
+    details: ['Name partially faded', 'Second-year Physics program'],
+    reporter: { name: 'Neha Verma', phone: '+1 (555) 014-8620', email: 'neha.verma@campus.edu' },
+  },
+  {
+    id: 'itm-105',
+    name: 'Mathematics Notebook',
+    status: 'lost',
+    category: 'books',
+    location: 'Block A - Lecture Hall 2',
+    date: '2026-08-14',
+    description: 'Spiral notebook with complete Calculus-II notes, misplaced just before mid-term week.',
+    details: ['Planet doodles on the cover', 'Name written on the first page'],
+    reporter: { name: 'Ishan Gupta', phone: '+1 (555) 014-3348', email: 'ishan.gupta@campus.edu' },
+  },
+  {
+    id: 'itm-106',
+    name: 'Silver Keychain with Keys',
+    status: 'found',
+    category: 'keys',
+    location: 'Parking Area P2',
+    date: '2026-08-21',
+    description: 'A set of keys with a silver charm found by the P2 exit ramp and kept at the security office.',
+    details: ["Round charm engraved with 'Drive Safe'", 'Two brass keys and one small fob'],
+    reporter: { name: 'Farhan Ali', phone: '+1 (555) 014-5501', email: 'farhan.ali@campus.edu' },
+  },
+  {
+    id: 'itm-107',
+    name: 'Navy Blue Hoodie',
+    status: 'lost',
+    category: 'clothing',
+    location: 'Sports Complex',
+    date: '2026-08-12',
+    description: 'Left on the bleachers during evening basketball practice. University marathon print on the front.',
+    details: ['Size M', 'White-tipped drawstrings'],
+    reporter: { name: 'Sara Thomas', phone: '+1 (555) 014-7723', email: 'sara.thomas@campus.edu' },
+  },
+  {
+    id: 'itm-108',
+    name: 'Steel Water Bottle',
+    status: 'found',
+    category: 'other',
+    location: 'Science Block',
+    date: '2026-08-22',
+    description: 'Insulated steel bottle found outside the Chemistry lab corridor after the afternoon session.',
+    details: ['Mountain-range sticker on the body', 'Small dents near the base'],
+    reporter: { name: 'Dev Patel', phone: '+1 (555) 014-1194', email: 'dev.patel@campus.edu' },
+  },
+  {
+    id: 'itm-109',
+    name: 'iPhone 13 (Black)',
+    status: 'lost',
+    category: 'electronics',
+    location: 'Main Auditorium',
+    date: '2026-08-17',
+    description: 'Missing since the cultural fest rehearsal. Last seen in the second-row seating area.',
+    details: ['Clear phone case', 'Mountains wallpaper on the lock screen'],
+    reporter: { name: 'Ananya Iyer', phone: '+1 (555) 014-6287', email: 'ananya.iyer@campus.edu' },
+  },
+  {
+    id: 'itm-110',
+    name: 'Organic Chemistry Textbook',
+    status: 'found',
+    category: 'books',
+    location: 'Central Library',
+    date: '2026-08-16',
+    description: 'Third-edition textbook found on the reserve shelf. Currently held at the circulation desk.',
+    details: ['Old receipt used as a bookmark', 'Chapters 4 to 7 highlighted'],
+    reporter: { name: 'Rahul Nair', phone: '+1 (555) 014-9042', email: 'rahul.nair@campus.edu' },
+  },
+  {
+    id: 'itm-111',
+    name: 'Car Keys with Black Fob',
+    status: 'lost',
+    category: 'keys',
+    location: 'Parking Area P1',
+    date: '2026-08-19',
+    description: 'Dropped somewhere between the P1 stairwell and the bike racks, most likely in the evening.',
+    details: ['Red silicone cover on the fob', 'Supermarket loyalty tag attached'],
+    reporter: { name: 'Vikram Singh', phone: '+1 (555) 014-3856', email: 'vikram.singh@campus.edu' },
+  },
+  {
+    id: 'itm-112',
+    name: 'Gold-Rimmed Glasses',
+    status: 'found',
+    category: 'other',
+    location: 'Block B - Room 204',
+    date: '2026-08-13',
+    description: 'Prescription glasses left on the windowsill after the last lecture of the day.',
+    details: ['Gold half-rim frames', 'Brown hard case found beside them'],
+    reporter: { name: 'Meera Joshi', phone: '+1 (555) 014-7419', email: 'meera.joshi@campus.edu' },
+  },
+  {
+    id: 'itm-113',
+    name: 'Scientific Calculator',
+    status: 'lost',
+    category: 'electronics',
+    location: 'Exam Hall B',
+    date: '2026-08-11',
+    description: 'fx-991 model missing after the statistics exam. It was probably swept up with another desk.',
+    details: ['Name etched on the back panel', 'Cartoon-cat sticker on the front'],
+    reporter: { name: 'Tanvi Desai', phone: '+1 (555) 014-2265', email: 'tanvi.desai@campus.edu' },
+  },
+  {
+    id: 'itm-114',
+    name: 'Black Umbrella',
+    status: 'found',
+    category: 'clothing',
+    location: 'Campus Bus Stop',
+    date: '2026-08-10',
+    description: 'Automatic umbrella left on the bench during the Monday morning rain.',
+    details: ['Wooden curved handle', 'Thin wrist strap'],
+    reporter: { name: 'Arjun Malhotra', phone: '+1 (555) 014-6138', email: 'arjun.malhotra@campus.edu' },
+  },
+];
+
+export function locationsFrom(items) {
+  return [...new Set(items.map((i) => i.location))].sort((a, b) => a.localeCompare(b));
+}
