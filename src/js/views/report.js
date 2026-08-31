@@ -341,17 +341,29 @@ export async function ReportPage(root, query) {
     };
 
     try {
+      let saved = null;
       if (editItem) {
         await api.updateItem(editItem.id, payload);
+        saved = editItem;
         if (photoData) {
           try {
-            await api.uploadImage(editItem.id, photoData);
-          } catch {
-            /* listing is saved; image replacement failed non-fatally */
+            saved = await api.uploadImage(editItem.id, photoData);
+          } catch (err) {
+            saved = {
+              ...editItem,
+              _imageError: err && err.message ? err.message : 'Photo upload failed.',
+            };
           }
         }
       } else {
-        await createReport(payload, photoData);
+        saved = await createReport(payload, photoData);
+      }
+      if (saved && saved._imageError) {
+        toast(copy.success);
+        toast(`Listing saved, but the photo could not be uploaded: ${saved._imageError}`, 'error');
+        const target = editItem ? `/item/${editItem.id}` : (isLost ? '/lost-items' : '/found-items');
+        setTimeout(() => nav(target), 1800);
+        return;
       }
       toast(copy.success);
       const target = editItem ? `/item/${editItem.id}` : (isLost ? '/lost-items' : '/found-items');

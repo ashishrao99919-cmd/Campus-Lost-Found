@@ -91,7 +91,8 @@ async function createReport(payload, photoData) {
   if (photoData && item) {
     try {
       return await api.uploadImage(item.id, photoData);
-    } catch {
+    } catch (err) {
+      item._imageError = err && err.message ? err.message : 'Photo upload failed.';
       return item;
     }
   }
